@@ -1,0 +1,10 @@
+.env
+env/
+__pycache__/
+*.pyc
+*.sqlite
+*.db
+logs/*
+!logs/.gitkeep
+data/*
+!data/.gitkeep

@@ -1,0 +1,10 @@
+services:
+  froggy-mvp:
+    build: .
+    container_name: froggy-mvp
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
