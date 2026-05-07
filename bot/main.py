@@ -29,26 +29,33 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 # ============================================================
 
 MVP_DATA = {
-    1: {
+    1832: {
         "name": "Ifrit",
-        "cooldown": 12,
-        "window": 1,
+        "cooldown": 660,
+        "window": 10,
         "maps": ["thor_v03"],
         "image": "https://file5s.ratemyserver.net/mobs/1832.gif"
     },
-    2: {
+    1751: {
         "name": "Valkyrie Randgris",
-        "cooldown": 120,
+        "cooldown": 480,
         "window": 10,
         "maps": ["odin_tem03"],
         "image": "https://file5s.ratemyserver.net/mobs/1751.gif"
     },
-    3: {
+    1583: {
     "name": "Tao Gunka",
-    "cooldown": 120,
+    "cooldown": 300,
     "window": 10,
     "maps": ["beach_dun", "cmd_fild03"],
     "image": "https://file5s.ratemyserver.net/mobs/1583.gif"
+    },
+    1059: {
+    "name": "Mistress",
+    "cooldown": 120,
+    "window": 10,
+    "maps": ["mjolnir_04"],
+    "image": "https://file5s.ratemyserver.net/mobs/1059.gif"
 }
 }
 
