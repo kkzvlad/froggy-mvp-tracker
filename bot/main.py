@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import pytz
 import asyncio
+from bot.database import init_db, create_or_update_timer, get_active_timers, delete_timer, get_timer_by_name, update_notification_flag
 
 
 # ============================================================
@@ -19,6 +20,11 @@ import asyncio
 load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV")
+DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
+DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/data/bot.sqlite")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 
 # ============================================================
@@ -60,14 +66,10 @@ MVP_DATA = {
 }
 
 
-# ============================================================
-# BLOCK 4 — ACTIVE TIMERS STORAGE
-# Тимчасове збереження таймерів у пам'яті.
-# Після перезапуску бота ці таймери пропадуть.
-# Пізніше замінимо на SQLite.
-# ============================================================
+# =========================================================
+# BLOCK 4 — BACKGROUND TASKS
+# =========================================================
 
-ACTIVE_TIMERS = []
 notification_task = None
 
 # ============================================================
@@ -148,6 +150,12 @@ async def on_ready():
     global notification_task
 
     print(f"Logged in as {bot.user}")
+    print(f"Environment: {ENVIRONMENT}")
+    print(f"Alert channel ID: {ALERT_CHANNEL_ID}")
+    print(f"Database path: {DATABASE_PATH}")
+
+    init_db()
+    print(f"[{ENVIRONMENT}] Database initialized")
 
     try:
         synced = await bot.tree.sync()
@@ -261,43 +269,26 @@ async def mvp_add(
 
     embed.set_thumbnail(url=mvp["image"])
 
-    # ---------- 9.5 Check existing timer ----------
-    existing_timer = None
+    # ---------- 9.5 Save timer to SQLite ----------
 
-    for timer in ACTIVE_TIMERS:
-        if timer["name"] == mvp["name"] and timer["map"] == selected_map:
-            existing_timer = timer
-            break
+    timer_id, was_updated = create_or_update_timer(
+        guild_id=interaction.guild_id,
+        channel_id=interaction.channel_id,
+        mvp_name=mvp["name"],
+        map_name=selected_map,
+        killed_at=now,
+        respawn_start=window_start,
+        respawn_end=window_end,
+        image=mvp["image"]
+    )
 
-    # ---------- 9.6 Create new timer ----------
-    new_timer = {
-        "name": mvp["name"],
-        "map": selected_map,
-        "killed_at": now,
-        "respawn_start": window_start,
-        "respawn_end": window_end,
-        "image": mvp["image"],
-        "notified_10min": False,
-        "notified_spawn": False
-    }
-
-    # ---------- 9.7 Add / update ----------
-    if existing_timer:
-        existing_timer["killed_at"] = now
-        existing_timer["respawn_start"] = window_start
-        existing_timer["respawn_end"] = window_end
-        existing_timer["image"] = mvp["image"]
-
-        # reset notification flags
-        existing_timer["notified_10min"] = False
-        existing_timer["notified_spawn"] = False
-
+    if was_updated:
         message = f"🔄 {mvp['name']} ({selected_map}) timer updated"
     else:
-        ACTIVE_TIMERS.append(new_timer)
         message = f"✅ {mvp['name']} ({selected_map}) timer added"
 
-    # ---------- 9.8 Send ----------
+    # ---------- 9.6 Send ----------
+
     await interaction.followup.send(
         content=message,
         embed=embed
@@ -344,12 +335,10 @@ class SetKillTimeModal(discord.ui.Modal, title="Set MVP kill time"):
             )
             return
 
-        timer = None
-
-        for t in ACTIVE_TIMERS:
-            if t["name"] == self.mvp_name:
-                timer = t
-                break
+        timer = get_timer_by_name(
+            guild_id=interaction.guild_id,
+            mvp_name=self.mvp_name
+        )
 
         if not timer:
             await interaction.response.send_message(
@@ -388,11 +377,16 @@ class SetKillTimeModal(discord.ui.Modal, title="Set MVP kill time"):
         window_start = killed_at + timedelta(minutes=mvp["cooldown"])
         window_end = window_start + timedelta(minutes=mvp["window"])
 
-        timer["killed_at"] = killed_at
-        timer["respawn_start"] = window_start
-        timer["respawn_end"] = window_end
-        timer["notified_10min"] = False
-        timer["notified_spawn"] = False
+        create_or_update_timer(
+    guild_id=interaction.guild_id,
+    channel_id=interaction.channel_id,
+    mvp_name=self.mvp_name,
+    map_name=timer["map_name"],
+    killed_at=killed_at,
+    respawn_start=window_start,
+    respawn_end=window_end,
+    image=timer["image"]
+)
 
         embed = discord.Embed(
             title=f"🐸 {self.mvp_name}",
@@ -406,7 +400,7 @@ class SetKillTimeModal(discord.ui.Modal, title="Set MVP kill time"):
             value=f"{window_start.strftime('%H:%M')} - {window_end.strftime('%H:%M')}",
             inline=True
         )
-        embed.add_field(name="🗺 Map", value=timer["map"], inline=False)
+        embed.add_field(name="🗺 Map", value=timer["map_name"], inline=False)
         embed.set_thumbnail(url=timer["image"])
 
         await interaction.response.send_message(
@@ -422,12 +416,10 @@ class MvpTimerView(discord.ui.View):
 
     @discord.ui.button(label="Kill now", emoji="⚔️", style=discord.ButtonStyle.success)
     async def kill_now(self, interaction: discord.Interaction, button: discord.ui.Button):
-        timer = None
-
-        for t in ACTIVE_TIMERS:
-            if t["name"] == self.mvp_name:
-                timer = t
-                break
+        timer = get_timer_by_name(
+            guild_id=interaction.guild_id,
+            mvp_name=self.mvp_name
+        )
 
         if not timer:
             await interaction.response.send_message(
@@ -454,11 +446,16 @@ class MvpTimerView(discord.ui.View):
         window_start = now + timedelta(minutes=mvp["cooldown"])
         window_end = window_start + timedelta(minutes=mvp["window"])
 
-        timer["killed_at"] = now
-        timer["respawn_start"] = window_start
-        timer["respawn_end"] = window_end
-        timer["notified_10min"] = False
-        timer["notified_spawn"] = False
+        create_or_update_timer(
+            guild_id=interaction.guild_id,
+            channel_id=interaction.channel_id,
+            mvp_name=self.mvp_name,
+            map_name=timer["map_name"],
+            killed_at=now,
+            respawn_start=window_start,
+            respawn_end=window_end,
+            image=timer["image"]
+        )
 
         embed = discord.Embed(
             title=f"🐸 {self.mvp_name}",
@@ -467,12 +464,14 @@ class MvpTimerView(discord.ui.View):
         )
 
         embed.add_field(name="🕒 Killed", value=now.strftime("%H:%M"), inline=True)
+
         embed.add_field(
             name="⏳ Respawn Window",
             value=f"{window_start.strftime('%H:%M')} - {window_end.strftime('%H:%M')}",
             inline=True
         )
-        embed.add_field(name="🗺 Map", value=timer["map"], inline=False)
+
+        embed.add_field(name="🗺 Map", value=timer["map_name"], inline=False)
         embed.set_thumbnail(url=timer["image"])
 
         await interaction.response.send_message(
@@ -485,20 +484,21 @@ class MvpTimerView(discord.ui.View):
         await interaction.response.send_modal(SetKillTimeModal(self.mvp_name))
 
     @discord.ui.button(label="Delete", emoji="🗑️", style=discord.ButtonStyle.danger)
-    async def delete_timer(self, interaction: discord.Interaction, button: discord.ui.Button):
-        for t in ACTIVE_TIMERS:
-            if t["name"] == self.mvp_name:
-                ACTIVE_TIMERS.remove(t)
-
-                await interaction.response.send_message(
-                    f"🗑️ {self.mvp_name} timer deleted"
-                )
-                return
-
-        await interaction.response.send_message(
-            f"❌ Timer for {self.mvp_name} not found",
-            ephemeral=True
+    async def delete_timer_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        deleted_count = delete_timer(
+            guild_id=interaction.guild_id,
+            mvp_name=self.mvp_name
         )
+
+        if deleted_count > 0:
+            await interaction.response.send_message(
+                f"🗑️ {self.mvp_name} timer deleted"
+            )
+        else:
+            await interaction.response.send_message(
+                f"❌ Timer for {self.mvp_name} not found",
+                ephemeral=True
+            )
 
 
 # ============================================================
@@ -509,48 +509,47 @@ class MvpTimerView(discord.ui.View):
 
 @bot.tree.command(name="mvp_list", description="Show active MVP timers")
 async def mvp_list(interaction: discord.Interaction):
-    if not ACTIVE_TIMERS:
+    timers = get_active_timers(interaction.guild_id)
+
+    if not timers:
         await interaction.response.send_message("❌ No active MVP timers")
         return
 
     await interaction.response.send_message("🐸 Active MVP Timers:")
 
-# Сортування по часу до респу
     now = datetime.now(pytz.timezone("Europe/Kyiv"))
 
-    sorted_timers = sorted(
-    ACTIVE_TIMERS,
-    key=lambda t: (t["respawn_start"] - now).total_seconds()
-)
+    for timer in timers:
+        respawn_start = datetime.fromisoformat(timer["respawn_start"])
+        respawn_end = datetime.fromisoformat(timer["respawn_end"])
+        killed_at = datetime.fromisoformat(timer["killed_at"])
 
-    for timer in sorted_timers:
-        now = datetime.now(pytz.timezone("Europe/Kyiv"))
-
-        remaining_seconds = int((timer["respawn_start"] - now).total_seconds())
+        remaining_seconds = int((respawn_start - now).total_seconds())
         minutes_left = remaining_seconds // 60
 
         if minutes_left >= 0:
             time_left = f"{minutes_left} min"
         else:
             time_left = f"-{abs(minutes_left)} min"
+
         embed = discord.Embed(
-            title=f"🐸 {timer['name']}",
+            title=f"🐸 {timer['mvp_name']}",
             color=0x00ff88
         )
 
         embed.add_field(
             name="🕒 Killed",
-            value=timer["killed_at"].strftime("%H:%M"),
+            value=killed_at.strftime("%H:%M"),
             inline=True
         )
 
         embed.add_field(
             name="⏳ Respawn Window",
             value=(
-                f"{timer['respawn_start'].strftime('%H:%M')} - "
-                f"{timer['respawn_end'].strftime('%H:%M')}"
+                f"{respawn_start.strftime('%H:%M')} - "
+                f"{respawn_end.strftime('%H:%M')}"
             ),
-            inline=True        
+            inline=True
         )
 
         embed.add_field(
@@ -561,13 +560,13 @@ async def mvp_list(interaction: discord.Interaction):
 
         embed.add_field(
             name="🗺 Map",
-            value=timer["map"],
+            value=timer["map_name"],
             inline=False
         )
 
         embed.set_thumbnail(url=timer["image"])
 
-        view = MvpTimerView(timer["name"])
+        view = MvpTimerView(timer["mvp_name"])
 
         await interaction.followup.send(
             embed=embed,
@@ -583,22 +582,31 @@ async def mvp_list(interaction: discord.Interaction):
 async def notification_loop():
     await bot.wait_until_ready()
 
-    channel_id = 1498686931759005696
-    channel = bot.get_channel(channel_id)
-
     while not bot.is_closed():
         now = datetime.now(pytz.timezone("Europe/Kyiv"))
 
-        for timer in ACTIVE_TIMERS:
-            seconds_to_spawn = (timer["respawn_start"] - now).total_seconds()
+        timers = get_active_timers()
+
+        for timer in timers:
+            respawn_start = datetime.fromisoformat(timer["respawn_start"])
+            seconds_to_spawn = (respawn_start - now).total_seconds()
+
+            channel = bot.get_channel(int(timer["channel_id"]))
+
+            if channel is None:
+                print(f"[{ENVIRONMENT}] Alert channel not found: {timer['channel_id']}")
+                continue
 
             # ⏰ 10 хв до респу
-            if 0 < seconds_to_spawn <= 600 and not timer.get("notified_10min", False):
+            if (
+                0 < seconds_to_spawn <= 600
+                and int(timer["notified_10min"]) == 0
+            ):
                 embed = discord.Embed(
-                    title=f"⏰ {timer['name']}",
+                    title=f"⏰ {timer['mvp_name']}",
                     description=(
                         f"Spawns in 10 minutes!\n"
-                        f"🗺 Map: **{timer['map']}**"
+                        f"🗺 Map: **{timer['map_name']}**"
                     ),
                     color=0xFFD700
                 )
@@ -607,15 +615,21 @@ async def notification_loop():
 
                 await channel.send(embed=embed)
 
-                timer["notified_10min"] = True
+                update_notification_flag(
+                    timer_id=timer["id"],
+                    flag_name="notified_10min"
+                )
 
             # 🔥 початок вікна
-            if seconds_to_spawn <= 0 and not timer.get("notified_spawn", False):
+            if (
+                seconds_to_spawn <= 0
+                and int(timer["notified_spawn"]) == 0
+            ):
                 embed = discord.Embed(
-                    title=f"🔥 {timer['name']}",
+                    title=f"🔥 {timer['mvp_name']}",
                     description=(
                         f"Spawn window is OPEN!\n"
-                        f"🗺 Map: **{timer['map']}**"
+                        f"🗺 Map: **{timer['map_name']}**"
                     ),
                     color=0xFF0000
                 )
@@ -624,7 +638,10 @@ async def notification_loop():
 
                 await channel.send(embed=embed)
 
-                timer["notified_spawn"] = True
+                update_notification_flag(
+                    timer_id=timer["id"],
+                    flag_name="notified_spawn"
+                )
 
         await asyncio.sleep(30)
 
