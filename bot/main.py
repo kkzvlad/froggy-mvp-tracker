@@ -21,7 +21,7 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "DEV")
-DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+DISCORD_GUILD_ID = int(os.getenv("DISCORD_GUILD_ID"))
 ALERT_CHANNEL_ID = int(os.getenv("ALERT_CHANNEL_ID"))
 DATABASE_PATH = os.getenv("DATABASE_PATH", "/app/data/bot.sqlite")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -29,7 +29,7 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # ============================================================
 # BLOCK 3 — MVP DATABASE
-# Тут поки зберігаємо MVP вручну в коді
+# Тут поки зберігаємо MVP вручну в кодіВ
 # cooldown = скільки хвилин MVP точно не буде
 # window = скільки хвилин триває вікно респу
 # ============================================================
@@ -149,19 +149,30 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     global notification_task
 
-    print(f"Logged in as {bot.user}")
-    print(f"Environment: {ENVIRONMENT}")
-    print(f"Alert channel ID: {ALERT_CHANNEL_ID}")
-    print(f"Database path: {DATABASE_PATH}")
+    print(f"Logged in as {bot.user}", flush=True)
+    print(f"Environment: {ENVIRONMENT}", flush=True)
+    print(f"Alert channel ID: {ALERT_CHANNEL_ID}", flush=True)
+    print(f"Database path: {DATABASE_PATH}", flush=True)
 
     init_db()
-    print(f"[{ENVIRONMENT}] Database initialized")
+    print(f"[{ENVIRONMENT}] Database initialized", flush=True)
 
     try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} commands")
+        # Remove old global commands
+        bot.tree.clear_commands(guild=None)
+        await bot.tree.sync()
+
+        # Sync guild commands
+        guild = discord.Object(id=DISCORD_GUILD_ID)
+        synced = await bot.tree.sync(guild=guild)
+
+        print(
+            f"Synced {len(synced)} commands for guild {DISCORD_GUILD_ID}",
+            flush=True
+        )
+
     except Exception as e:
-        print(e)
+        print(e, flush=True)
 
     if notification_task is None:
         notification_task = bot.loop.create_task(notification_loop())
@@ -171,7 +182,11 @@ async def on_ready():
 # Команда для перевірки, що бот живий
 # ============================================================
 
-@bot.tree.command(name="ping", description="Test command")
+@bot.tree.command(
+    name="ping",
+    description="Test command",
+    guild=discord.Object(id=DISCORD_GUILD_ID)
+)
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("🐸 Froggy is alive!")
 
@@ -182,7 +197,11 @@ async def ping(interaction: discord.Interaction):
 # Підтримує вибір мапи
 # ============================================================
 
-@bot.tree.command(name="mvp_add", description="Add MVP kill timer")
+@bot.tree.command(
+    name="mvp_add",
+    description="Add MVP kill timer",
+    guild=discord.Object(id=DISCORD_GUILD_ID)
+)
 @app_commands.autocomplete(
     name=mvp_autocomplete,
     map_name=map_autocomplete
@@ -507,7 +526,11 @@ class MvpTimerView(discord.ui.View):
 # Показує активні MVP таймери окремими картками з кнопками
 # ============================================================
 
-@bot.tree.command(name="mvp_list", description="Show active MVP timers")
+@bot.tree.command(
+    name="mvp_list",
+    description="Show active MVP timers",
+    guild=discord.Object(id=DISCORD_GUILD_ID)
+)
 async def mvp_list(interaction: discord.Interaction):
     timers = get_active_timers(interaction.guild_id)
 
