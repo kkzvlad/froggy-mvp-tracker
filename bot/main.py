@@ -69,6 +69,27 @@ MVP_DATA = {
         "window": 10,
         "maps": ["gef_dun01"],
         "image": "https://file5s.ratemyserver.net/mobs/1389.gif"
+    },
+    1150: {
+        "name": "Moonlight Flower",
+        "cooldown": 60,
+        "window": 10,
+        "maps": ["pay_dun04"],
+        "image": "https://file5s.ratemyserver.net/mobs/1150.gif"
+    },
+    1086: {
+        "name": "Golden Thief Bug",
+        "cooldown": 60,
+        "window": 10,
+        "maps": ["prt_sewb4"],
+        "image": "https://file5s.ratemyserver.net/mobs/1086.gif"
+    },
+    1272: {
+        "name": "Dark Lord",
+        "cooldown": 60,
+        "window": 10,
+        "maps": ["gl_chyard"],
+        "image": "https://file5s.ratemyserver.net/mobs/1272.gif"
     }
 }
 
