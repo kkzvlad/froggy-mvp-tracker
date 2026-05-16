@@ -50,19 +50,26 @@ MVP_DATA = {
         "image": "https://file5s.ratemyserver.net/mobs/1751.gif"
     },
     1583: {
-    "name": "Tao Gunka",
-    "cooldown": 300,
-    "window": 10,
-    "maps": ["beach_dun", "cmd_fild03"],
-    "image": "https://file5s.ratemyserver.net/mobs/1583.gif"
+        "name": "Tao Gunka",
+        "cooldown": 300,
+        "window": 10,
+        "maps": ["beach_dun", "cmd_fild03"],
+        "image": "https://file5s.ratemyserver.net/mobs/1583.gif"
     },
     1059: {
-    "name": "Mistress",
-    "cooldown": 120,
-    "window": 10,
-    "maps": ["mjolnir_04"],
-    "image": "https://file5s.ratemyserver.net/mobs/1059.gif"
-}
+        "name": "Mistress",
+        "cooldown": 120,
+        "window": 10,
+        "maps": ["mjolnir_04"],
+        "image": "https://file5s.ratemyserver.net/mobs/1059.gif"
+    },
+    1389: {
+        "name": "Dracula",
+        "cooldown": 60,
+        "window": 10,
+        "maps": ["gef_dun01"],
+        "image": "https://file5s.ratemyserver.net/mobs/1389.gif"
+    }
 }
 
 
