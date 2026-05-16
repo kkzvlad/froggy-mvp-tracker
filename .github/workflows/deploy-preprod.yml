@@ -1,0 +1,33 @@
+name: Deploy PREPROD
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy-preprod:
+    name: Deploy to PREPROD VM
+    runs-on: ubuntu-latest
+    environment: preprod
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PREPROD_HOST }}
+          username: ${{ secrets.PREPROD_USER }}
+          key: ${{ secrets.PREPROD_SSH_KEY }}
+          port: ${{ secrets.PREPROD_SSH_PORT }}
+          script: |
+            set -e
+
+            cd /opt/froggy-mvp-preprod
+
+            git fetch origin develop
+            git reset --hard origin/develop
+
+            docker compose down
+            docker compose up -d --build
+
+            docker compose ps
