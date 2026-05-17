@@ -146,6 +146,48 @@ MVP_DATA = {
         "window": 10,
         "maps": ["moc_fild22"],
         "image": "https://file5s.ratemyserver.net/mobs/1917.gif"
+    },
+    2476: {
+        "name": "Amdarais",
+        "cooldown": 720,
+        "window": 10,
+        "maps": ["2@gl_k(1)"],
+        "image": "https://file5s.ratemyserver.net/mobs/2476.gif"
+    },
+    2475: {
+        "name": "Corrupted Soul / Root of Corruption",
+        "cooldown": 720,
+        "window": 10,
+        "maps": ["1@gl_k(1)"],
+        "image": "https://file5s.ratemyserver.net/mobs/2475.gif"
+    },
+    1874: {
+        "name": "Beelzebub",
+        "cooldown": 720,
+        "window": 10,
+        "maps": ["abbey03"],
+        "image": "https://file5s.ratemyserver.net/mobs/1874.gif"
+    },
+    1641: {
+        "name": "Assassin Cross Eremes [MiniBoss]",
+        "cooldown": 43,
+        "window": 39,
+        "maps": ["lhz_dun03"],
+        "image": "https://file5s.ratemyserver.net/mobs/1641.gif"
+    },
+    2018: {
+        "name": "Duneyrr #1",
+        "cooldown": 15,
+        "window": 0,
+        "maps": ["nyd_dun01"],
+        "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
+    },
+    2018: {
+        "name": "Duneyrr #2",
+        "cooldown": 15,
+        "window": 0,
+        "maps": ["nyd_dun01"],
+        "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
     }
 }
 
