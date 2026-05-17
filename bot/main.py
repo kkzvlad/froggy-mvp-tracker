@@ -175,14 +175,14 @@ MVP_DATA = {
         "maps": ["lhz_dun03"],
         "image": "https://file5s.ratemyserver.net/mobs/1641.gif"
     },
-    2018: {
+    2018-1: {
         "name": "Duneyrr #1",
         "cooldown": 15,
         "window": 0,
         "maps": ["nyd_dun01"],
         "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
     },
-    2018: {
+    2018-2: {
         "name": "Duneyrr #2",
         "cooldown": 15,
         "window": 0,
