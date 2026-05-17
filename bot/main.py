@@ -90,6 +90,62 @@ MVP_DATA = {
         "window": 10,
         "maps": ["gl_chyard"],
         "image": "https://file5s.ratemyserver.net/mobs/1272.gif"
+    },
+    1087: {
+        "name": "Orc Hero",
+        "cooldown": 60,
+        "window": 10,
+        "maps": ["gef_fild14"],
+        "image": "https://file5s.ratemyserver.net/mobs/1087.gif"
+    },
+    1492: {
+        "name": "Incantation Samurai / Samurai Specter",
+        "cooldown": 91,
+        "window": 10,
+        "maps": ["ama_dun03"],
+        "image": "https://file5s.ratemyserver.net/mobs/1492.gif"
+    },
+    1115: {
+        "name": "Eddga",
+        "cooldown": 120,
+        "window": 10,
+        "maps": ["pay_fild11"],
+        "image": "https://file5s.ratemyserver.net/mobs/1115.gif"
+    },
+    1159: {
+        "name": "Phreeoni",
+        "cooldown": 120,
+        "window": 10,
+        "maps": ["moc_fild17"],
+        "image": "https://file5s.ratemyserver.net/mobs/1159.gif"
+    },
+    1623: {
+        "name": "RSX-0806",
+        "cooldown": 125,
+        "window": 10,
+        "maps": ["ein_dun02"],
+        "image": "https://file5s.ratemyserver.net/mobs/1623.gif"
+    },
+    1688: {
+        "name": "Lady Tanee",
+        "cooldown": 420,
+        "window": 10,
+        "maps": ["ayo_dun02"],
+        "image": "https://file5s.ratemyserver.net/mobs/1688.gif"
+    },
+    1688: {
+        "name": "Lady Tanee",
+        "cooldown": 420,
+        "window": 10,
+        "maps": ["ayo_dun02"],
+        "image": "https://file5s.ratemyserver.net/mobs/1688.gif"
+    },
+    1917: {
+        "name": "Wounded Morocc",
+        "cooldown": 720,
+        "window": 10,
+        "maps": ["moc_fild22"],
+        "image": "https://file5s.ratemyserver.net/mobs/1917.gif"
     }
 }
 
