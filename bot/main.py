@@ -316,9 +316,78 @@ async def on_ready():
 async def ping(interaction: discord.Interaction):
     await interaction.response.send_message("🐸 Froggy is alive!")
 
+# ============================================================
+# BLOCK 9 — HELP COMMAND
+# Показує список команд та пояснення по боту
+# ============================================================
+
+@bot.tree.command(
+    name="help",
+    description="Show bot help and commands",
+    guild=discord.Object(id=DISCORD_GUILD_ID)
+)
+async def help_command(interaction: discord.Interaction):
+
+    embed = discord.Embed(
+        title="🐸 Froggy MVP Tracker Help",
+        description=(
+            "Track Ragnarok Online MVP respawns directly in Discord.\n\n"
+            "Use slash commands to add and manage MVP timers."
+        ),
+        color=0x00ff88
+    )
+
+    embed.add_field(
+        name="⚔️ Commands",
+        value=(
+            "`/mvp_add` → Add new MVP timer\n"
+            "`/mvp_list` → Show active MVP timers\n"
+            "`/ping` → Check bot status\n"
+            "`/help` → Show this help message"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🕒 Buttons",
+        value=(
+            "⚔️ Kill now → Reset timer to current time\n"
+            "🕒 Set kill time → Manually set kill time\n"
+            "🗑️ Delete → Remove timer"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="🔔 Notifications",
+        value=(
+            "Bot automatically sends:\n"
+            "• 10 minute warning\n"
+            "• respawn window alert"
+        ),
+        inline=False
+    )
+
+    embed.add_field(
+        name="💾 Persistence",
+        value=(
+            "All timers are stored in SQLite.\n"
+            "Timers survive bot restarts and redeploys."
+        ),
+        inline=False
+    )
+
+    embed.set_footer(
+        text=f"Froggy MVP Tracker • {ENVIRONMENT}"
+    )
+
+    await interaction.response.send_message(
+        embed=embed,
+        ephemeral=True
+    )
 
 # ============================================================
-# BLOCK 9 — MVP ADD COMMAND
+# BLOCK 10 — MVP ADD COMMAND
 # Команда /mvp_add
 # Підтримує вибір мапи
 # ============================================================
@@ -339,7 +408,7 @@ async def mvp_add(
 ):
     await interaction.response.defer()
 
-    # ---------- 9.1 Find MVP ----------
+    # ---------- 10.1 Find MVP ----------
     mvp = None
 
     if name.isdigit():
@@ -357,7 +426,7 @@ async def mvp_add(
         )
         return
 
-    # ---------- 9.2 Select map ----------
+    # ---------- 10.2 Select map ----------
     available_maps = mvp["maps"]
 
     if len(available_maps) == 1:
@@ -381,13 +450,13 @@ async def mvp_add(
 
         selected_map = map_name
 
-    # ---------- 9.3 Calculate respawn ----------
+    # ---------- 10.3 Calculate respawn ----------
     now = datetime.now(pytz.timezone("Europe/Kyiv"))
 
     window_start = now + timedelta(minutes=mvp["cooldown"])
     window_end = window_start + timedelta(minutes=mvp["window"])
 
-    # ---------- 9.4 Create embed ----------
+    # ---------- 10.4 Create embed ----------
     embed = discord.Embed(
         title=f"🐸 {mvp['name']}",
         description="MVP timer started",
@@ -414,7 +483,7 @@ async def mvp_add(
 
     embed.set_thumbnail(url=mvp["image"])
 
-    # ---------- 9.5 Save timer to SQLite ----------
+    # ---------- 10.5 Save timer to SQLite ----------
 
     timer_id, was_updated = create_or_update_timer(
         guild_id=interaction.guild_id,
@@ -432,7 +501,7 @@ async def mvp_add(
     else:
         message = f"✅ {mvp['name']} ({selected_map}) timer added"
 
-    # ---------- 9.6 Send ----------
+    # ---------- 10.6 Send ----------
 
     await interaction.followup.send(
         content=message,
@@ -441,7 +510,7 @@ async def mvp_add(
 
 
 # ============================================================
-# BLOCK 10 — MVP TIMER BUTTONS
+# BLOCK 11 — MVP TIMER BUTTONS
 # Кнопки під MVP таймерами:
 # Kill now — оновлює таймер від поточного часу
 # Delete — видаляє таймер
@@ -647,7 +716,7 @@ class MvpTimerView(discord.ui.View):
 
 
 # ============================================================
-# BLOCK 11 — MVP LIST COMMAND
+# BLOCK 12 — MVP LIST COMMAND
 # Команда /mvp_list
 # Показує активні MVP таймери окремими картками з кнопками
 # ============================================================
@@ -724,7 +793,7 @@ async def mvp_list(interaction: discord.Interaction):
 
 
 # ============================================================
-# BLOCK 12 — NOTIFICATION LOOP
+# BLOCK 13 — NOTIFICATION LOOP
 # Перевірка таймерів і відправка сповіщень
 # ============================================================
 
@@ -795,7 +864,7 @@ async def notification_loop():
         await asyncio.sleep(30)
 
 # ============================================================
-# BLOCK 13 — BOT START
+# BLOCK 14 — BOT START
 # Завжди має бути в самому низу файлу
 # ============================================================
 
