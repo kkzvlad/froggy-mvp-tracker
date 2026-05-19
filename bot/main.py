@@ -175,14 +175,14 @@ MVP_DATA = {
         "maps": ["lhz_dun03"],
         "image": "https://file5s.ratemyserver.net/mobs/1641.gif"
     },
-    2018-1: {
+    20181: {
         "name": "Duneyrr #1",
         "cooldown": 15,
         "window": 0,
         "maps": ["nyd_dun01"],
         "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
     },
-    2018-2: {
+    20182: {
         "name": "Duneyrr #2",
         "cooldown": 15,
         "window": 0,
@@ -730,10 +730,13 @@ async def mvp_list(interaction: discord.Interaction):
     timers = get_active_timers(interaction.guild_id)
 
     if not timers:
-        await interaction.response.send_message("❌ No active MVP timers")
+        await interaction.response.send_message(
+            "❌ No active MVP timers",
+            ephemeral=True
+        )
         return
 
-    await interaction.response.send_message("🐸 Active MVP Timers:")
+    await interaction.response.defer(ephemeral=True)
 
     now = datetime.now(pytz.timezone("Europe/Kyiv"))
 
@@ -776,19 +779,14 @@ async def mvp_list(interaction: discord.Interaction):
             inline=False
         )
 
-        embed.add_field(
-            name="🗺 Map",
-            value=timer["map_name"],
-            inline=False
-        )
-
         embed.set_thumbnail(url=timer["image"])
 
         view = MvpTimerView(timer["mvp_name"])
 
         await interaction.followup.send(
             embed=embed,
-            view=view
+            view=view,
+            ephemeral=True
         )
 
 
