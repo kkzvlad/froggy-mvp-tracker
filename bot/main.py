@@ -133,13 +133,6 @@ MVP_DATA = {
         "maps": ["ayo_dun02"],
         "image": "https://file5s.ratemyserver.net/mobs/1688.gif"
     },
-    1688: {
-        "name": "Lady Tanee",
-        "cooldown": 420,
-        "window": 10,
-        "maps": ["ayo_dun02"],
-        "image": "https://file5s.ratemyserver.net/mobs/1688.gif"
-    },
     1917: {
         "name": "Wounded Morocc",
         "cooldown": 720,
@@ -175,19 +168,19 @@ MVP_DATA = {
         "maps": ["lhz_dun03"],
         "image": "https://file5s.ratemyserver.net/mobs/1641.gif"
     },
-    20181: {
-        "name": "Duneyrr #1",
-        "cooldown": 15,
-        "window": 0,
-        "maps": ["nyd_dun01"],
-        "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
+    3: {
+        "name": "Random Labaratory F3 MVP",
+        "cooldown": 100,
+        "window": 30,
+        "maps": ["lhz_dun03"],
+        "image": "https://file5s.ratemyserver.net/maps_xl/lhz_dun03.gif"
     },
-    20182: {
-        "name": "Duneyrr #2",
-        "cooldown": 15,
-        "window": 0,
-        "maps": ["nyd_dun01"],
-        "image": "https://file5s.ratemyserver.net/mobs/2018.gif"
+    4: {
+        "name": "Random Labaratory F4 MVP",
+        "cooldown": 100,
+        "window": 30,
+        "maps": ["lhz_dun04"],
+        "image": "https://file5s.ratemyserver.net/maps_xl/lhz_dun04.gif"
     }
 }
 
